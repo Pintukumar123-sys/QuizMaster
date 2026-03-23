@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>QuizMaster - Result</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+    <!-- Export libraries -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <style>
+        body { display: none; }
+    </style>
+    <script>
+        console.log("Result page loading...");
+        
+        // Validation function to check quiz data
+        function validateAndShowResults() {
+            const score = localStorage.getItem("quizScore");
+            const totalQuestions = localStorage.getItem("totalQuestions");
+            
+            console.log("localStorage - quizScore:", score, "totalQuestions:", totalQuestions);
+
+            // Check if both values exist and are valid numbers
+            if (!score || !totalQuestions || isNaN(parseInt(score)) || isNaN(parseInt(totalQuestions)) || parseInt(totalQuestions) <= 0) {
+                console.log("Invalid quiz data. Redirecting to index.html");
+                window.location.replace("index.html");
+            } else {
+                // Show the body if we have valid data
+                console.log("Valid quiz data found. Showing body.");
+                document.body.style.display = 'block';
+            }
+        }
+        
+        // Call validation when page is ready
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', validateAndShowResults);
+        } else {
+            validateAndShowResults();
+        }
+    </script>
+</head>
+<body>
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary fixed-top" id="navbar">
+        <div class="container">
+            <a class="navbar-brand d-flex align-items-center" href="index.html">
+                <img src="assets/icons8-quizlet-250 (1).png" alt="QuizMaster Logo" class="navbar-logo" style="width: 40px;">
+                <span class="ms-2">QuizMaster</span>
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <div class="d-flex ms-auto align-items-center">
+                    <a href="index.html" class="home-icon-link me-3" title="Go to Home">
+                        <span class="home-icon">🏠</span>
+                    </a>
+                    <form class="d-flex" role="search">
+                        <input class="form-control me-2" type="search" placeholder="Search for quizzes..." aria-label="Search">
+                        <button class="btn btn-light" type="submit">Search</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Result Container -->
+    <div class="container mt-5 pt-5">
+        <div class="card shadow-lg result-card">
+            <div class="card-body text-center">
+                <div id="result-emoji" class="result-emoji">🎉</div>
+                <h2 class="text-primary fw-bold result-title">Quiz Completed!</h2>
+                <h3 id="final-score" class="text-success fw-bold mt-3 score-display">Your Score: 0/0</h3>
+                <p id="result-message" class="mt-3 text-muted result-message">Loading results...</p>
+
+                <!-- Performance Badge -->
+                <div id="performance-badge" class="performance-badge mt-3">
+                    <span id="badge-icon">🏆</span>
+                    <span id="badge-text">Loading...</span>
+                </div>
+
+                <!-- Score Progress Bar -->
+                <div class="progress mt-4 score-progress-container" style="height: 25px;">
+                    <div class="progress-bar progress-bar-striped bg-success score-progress-bar" id="score-progress" style="width: 0%;" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100">0%</div>
+                </div>
+
+                <!-- Statistics -->
+                <div class="stats-container mt-4">
+                    <div class="stat-item">
+                        <div class="stat-number" id="correct-count">0</div>
+                        <div class="stat-label">Correct</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-number" id="wrong-count">0</div>
+                        <div class="stat-label">Wrong</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-number" id="accuracy">0%</div>
+                        <div class="stat-label">Accuracy</div>
+                    </div>
+                </div>
+
+                <!-- Buttons -->
+                <div class="mt-4 button-container">
+                    <a href="index.html" class="btn btn-primary px-4 action-btn restart-btn">🔄 Try Again</a>
+                    <a href="index.html" class="btn btn-secondary px-4 action-btn home-btn">🏠 Home</a>
+                    <button id="share-btn" class="btn btn-info px-4 action-btn share-btn">📤 Share Score</button>
+                    <button id="export-pdf-btn" class="btn btn-success px-4 action-btn export-btn">📄 Export PDF</button>
+                    <button id="export-image-btn" class="btn btn-warning px-4 action-btn export-btn">🖼️ Export Image</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="bg-primary text-white text-center py-3 fixed-bottom">
+        <p>© 2025 QuizMaster. All rights reserved.</p>
+    </footer>
+
+    <!-- Inline Script -->
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            console.log("DOMContentLoaded - Starting dashboard initialization...");
+            
+            const finalScoreElement = document.getElementById("final-score");
+            const resultMessage = document.getElementById("result-message");
+            const scoreProgress = document.getElementById("score-progress");
+            const resultEmoji = document.getElementById("result-emoji");
+            const performanceBadge = document.getElementById("performance-badge");
+            const badgeIcon = document.getElementById("badge-icon");
+            const badgeText = document.getElementById("badge-text");
+            const correctCount = document.getElementById("correct-count");
+            const wrongCount = document.getElementById("wrong-count");
+            const accuracy = document.getElementById("accuracy");
+            const shareBtn = document.getElementById("share-btn");
+
+            console.log("All elements found:", {
+                finalScoreElement: !!finalScoreElement,
+                resultMessage: !!resultMessage,
+                scoreProgress: !!scoreProgress,
+                resultEmoji: !!resultEmoji
+            });
+
+            const score = parseInt(localStorage.getItem("quizScore")) || 0;
+            const totalQuestions = parseInt(localStorage.getItem("totalQuestions")) || 0;
+            const timeUp = localStorage.getItem("timeUp") === "true";
+            const percentage = totalQuestions > 0 ? (score / totalQuestions) * 100 : 0;
+
+            console.log("Quiz Results:", { score, totalQuestions, percentage, timeUp });
+
+            // Set progress bar width for animation
+            scoreProgress.style.setProperty('--progress-width', `${percentage}%`);
+
+            finalScoreElement.textContent = `Your Score: ${score}/${totalQuestions}`;
+            scoreProgress.style.width = `${percentage}%`;
+            scoreProgress.textContent = `${Math.round(percentage)}%`;
+            scoreProgress.setAttribute("aria-valuenow", percentage);
+
+            // Statistics
+            correctCount.textContent = score;
+            wrongCount.textContent = totalQuestions - score;
+            accuracy.textContent = `${Math.round(percentage)}%`;
+
+            // Dynamic content based on performance
+            let emoji, message, badgeIconText, badgeTextContent;
+
+            if (timeUp) {
+                emoji = "⏰";
+                message = "Time's up! Your quiz has been auto-submitted.";
+                badgeIconText = "⏱️";
+                badgeTextContent = "Time Challenge";
+            } else if (percentage >= 90) {
+                emoji = "🏆";
+                message = "Outstanding! You're a quiz master!";
+                badgeIconText = "👑";
+                badgeTextContent = "Quiz Master";
+                createConfetti();
+            } else if (percentage >= 80) {
+                emoji = "🎯";
+                message = "Excellent work! You nailed it!";
+                badgeIconText = "🎯";
+                badgeTextContent = "Expert";
+            } else if (percentage >= 70) {
+                emoji = "⭐";
+                message = "Great job! Well done!";
+                badgeIconText = "⭐";
+                badgeTextContent = "Achiever";
+            } else if (percentage >= 50) {
+                emoji = "👍";
+                message = "Good effort! Keep practicing!";
+                badgeIconText = "📚";
+                badgeTextContent = "Learner";
+            } else {
+                emoji = "💪";
+                message = "Keep trying! Every expert was once a beginner!";
+                badgeIconText = "🌱";
+                badgeTextContent = "Beginner";
+            }
+
+            resultEmoji.textContent = emoji;
+            resultMessage.textContent = message;
+            badgeIcon.textContent = badgeIconText;
+            badgeText.textContent = badgeTextContent;
+
+            console.log("Dashboard updated successfully");
+
+            // Share functionality
+            if (shareBtn) {
+                shareBtn.addEventListener("click", function() {
+                    const shareText = `I scored ${score}/${totalQuestions} (${Math.round(percentage)}%) in the QuizMaster! ${message} 🧠`;
+                    if (navigator.share) {
+                        navigator.share({
+                            title: 'QuizMaster Result',
+                            text: shareText,
+                            url: window.location.href
+                        });
+                    } else {
+                        // Fallback for browsers that don't support Web Share API
+                        navigator.clipboard.writeText(shareText).then(() => {
+                            alert('Score copied to clipboard! 📋');
+                        });
+                    }
+                });
+            }
+
+            // Export functionality
+            const exportPdfBtn = document.getElementById("export-pdf-btn");
+            const exportImageBtn = document.getElementById("export-image-btn");
+
+            if (exportPdfBtn) {
+                exportPdfBtn.addEventListener("click", function() {
+                    exportAsPDF();
+                });
+            }
+
+            if (exportImageBtn) {
+                exportImageBtn.addEventListener("click", function() {
+                    exportAsImage();
+                });
+            }
+
+            // Clean up localStorage
+            localStorage.removeItem("timeUp");
+        });
+
+        function createConfetti() {
+            console.log("Creating confetti...");
+            for (let i = 0; i < 50; i++) {
+                setTimeout(() => {
+                    const confetti = document.createElement('div');
+                    confetti.className = 'confetti';
+                    confetti.style.left = Math.random() * 100 + 'vw';
+                    confetti.style.background = `hsl(${Math.random() * 360}, 100%, 50%)`;
+                    confetti.style.animationDelay = Math.random() * 3 + 's';
+                    document.body.appendChild(confetti);
+
+                    setTimeout(() => {
+                        confetti.remove();
+                    }, 3000);
+                }, i * 50);
+            }
+        }
+
+        // Export as PDF function
+        function exportAsPDF() {
+            const { jsPDF } = window.jspdf;
+            const resultCard = document.querySelector('.result-card');
+
+            html2canvas(resultCard, {
+                backgroundColor: '#ffffff',
+                scale: 2
+            }).then(canvas => {
+                const imgData = canvas.toDataURL('image/png');
+                const pdf = new jsPDF('p', 'mm', 'a4');
+
+                const imgWidth = 210;
+                const pageHeight = 295;
+                const imgHeight = (canvas.height * imgWidth) / canvas.width;
+                let heightLeft = imgHeight;
+
+                let position = 0;
+
+                pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+                heightLeft -= pageHeight;
+
+                while (heightLeft >= 0) {
+                    position = heightLeft - imgHeight;
+                    pdf.addPage();
+                    pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+                    heightLeft -= pageHeight;
+                }
+
+                pdf.save('quizmaster-result.pdf');
+            });
+        }
+
+        // Export as Image function
+        function exportAsImage() {
+            const resultCard = document.querySelector('.result-card');
+
+            html2canvas(resultCard, {
+                backgroundColor: '#ffffff',
+                scale: 2
+            }).then(canvas => {
+                const link = document.createElement('a');
+                link.download = 'quizmaster-result.png';
+                link.href = canvas.toDataURL('image/png');
+                link.click();
+            });
+        }
+    </script>
+    <script>
+        // Additional search functionality for result page
+        document.addEventListener("DOMContentLoaded", function () {
+            const searchForm = document.querySelector("form[role='search']");
+            const searchInput = document.querySelector("input[type='search']");
+
+            if (searchForm && searchInput) {
+                searchForm.addEventListener("submit", function(e) {
+                    e.preventDefault();
+                    const searchTerm = searchInput.value.trim();
+                    if (searchTerm) {
+                        // Redirect to home page with search parameter
+                        window.location.href = `index.html?search=${encodeURIComponent(searchTerm)}`;
+                    } else {
+                        window.location.href = "index.html";
+                    }
+                });
+            }
+        });
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Debug Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        h1 { color: #333; }
+        .test-section {
+            margin: 20px 0;
+            padding: 15px;
+            background: #f9f9f9;
+            border-left: 4px solid #007bff;
+            border-radius: 4px;
+        }
+        button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            margin: 5px 5px 5px 0;
+        }
+        button:hover {
+            background: #0056b3;
+        }
+        .output {
+            background: #f0f0f0;
+            padding: 10px;
+            border-radius: 4px;
+            font-family: monospace;
+            margin-top: 10px;
+            white-space: pre-wrap;
+            word-break: break-all;
+        }
+        .success { color: green; }
+        .error { color: red; }
+        .info { color: #0066cc; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🧪 QuizMaster Debug Test</h1>
+        
+        <div class="test-section">
+            <h3>1️⃣ Test localStorage Data</h3>
+            <button onclick="testLocalStorage()">Check localStorage</button>
+            <button onclick="clearStorage()">Clear Storage</button>
+            <button onclick="testSetData()">Set Test Data</button>
+            <div id="storage-output" class="output"></div>
+        </div>
+
+        <div class="test-section">
+            <h3>2️⃣ Simulate Quiz Submission</h3>
+            <button onclick="simulateQuizSubmit()">Simulate Score: 8/10</button>
+            <button onclick="simulateTimeout()">Simulate Time Expired</button>
+            <div id="submit-output" class="output"></div>
+        </div>
+
+        <div class="test-section">
+            <h3>3️⃣ Test Navigation</h3>
+            <button onclick="goToResult()">Go to Result Page →</button>
+            <button onclick="goToHome()">Go to Home ↩️</button>
+            <div id="nav-output" class="output"></div>
+        </div>
+
+        <div class="test-section">
+            <h3>4️⃣ Test Console Logs</h3>
+            <p><strong>Open Developer Console (F12) to see logs</strong></p>
+            <button onclick="testConsoleLogs()">Run Console Tests</button>
+        </div>
+    </div>
+
+    <script>
+        function testLocalStorage() {
+            const output = document.getElementById('storage-output');
+            const score = localStorage.getItem("quizScore");
+            const totalQuestions = localStorage.getItem("totalQuestions");
+            const timeUp = localStorage.getItem("timeUp");
+            
+            let result = `📊 LocalStorage Status:\n`;
+            result += `━━━━━━━━━━━━━━━━━━━━━━━━\n`;
+            result += `quizScore: ${score || '❌ NOT SET'}\n`;
+            result += `totalQuestions: ${totalQuestions || '❌ NOT SET'}\n`;
+            result += `timeUp: ${timeUp || '❌ NOT SET'}\n`;
+            
+            if (score && totalQuestions) {
+                result += `\n✅ Data is VALID!\n`;
+                result += `Percentage: ${Math.round((parseInt(score) / parseInt(totalQuestions)) * 100)}%`;
+            } else {
+                result += `\n❌ Data is MISSING or INVALID!`;
+            }
+            
+            output.innerHTML = `<span class="${score ? 'success' : 'error'}">${result}</span>`;
+        }
+
+        function testSetData() {
+            localStorage.setItem("quizScore", "8");
+            localStorage.setItem("totalQuestions", "10");
+            document.getElementById('submit-output').innerHTML = `<span class="success">✅ Test data set: Score=8/10</span>`;
+            testLocalStorage();
+        }
+
+        function clearStorage() {
+            localStorage.removeItem("quizScore");
+            localStorage.removeItem("totalQuestions");
+            localStorage.removeItem("timeUp");
+            document.getElementById('storage-output').innerHTML = `<span class="error">🗑️ All data cleared!</span>`;
+        }
+
+        function simulateQuizSubmit() {
+            const output = document.getElementById('submit-output');
+            localStorage.setItem("quizScore", "8");
+            localStorage.setItem("totalQuestions", "10");
+            output.innerHTML = `<span class="success">✅ Simulated Quiz Submit:\nScore: 8/10 (80%)\nBadge: 🎯 Expert</span>`;
+            testLocalStorage();
+        }
+
+        function simulateTimeout() {
+            const output = document.getElementById('submit-output');
+            localStorage.setItem("quizScore", "5");
+            localStorage.setItem("totalQuestions", "10");
+            localStorage.setItem("timeUp", "true");
+            output.innerHTML = `<span class="info">⏰ Simulated Time Expired:\nScore: 5/10 (50%)\nBadge: ⏰ Time Challenge</span>`;
+            testLocalStorage();
+        }
+
+        function goToResult() {
+            const nav = document.getElementById('nav-output');
+            if (!localStorage.getItem("quizScore")) {
+                nav.innerHTML = `<span class="error">❌ Cannot navigate - No quiz data!\n\nFirst set test data using "Set Test Data" button</span>`;
+                return;
+            }
+            nav.innerHTML = `<span class="info">Redirecting to result.html...</span>`;
+            setTimeout(() => {
+                window.location.href = "result.html";
+            }, 1000);
+        }
+
+        function goToHome() {
+            window.location.href = "index.html";
+        }
+
+        function testConsoleLogs() {
+            console.log("🧪 QuizMaster Debug Test Started");
+            console.log("📊 LocalStorage Check:");
+            console.log("  quizScore:", localStorage.getItem("quizScore"));
+            console.log("  totalQuestions:", localStorage.getItem("totalQuestions"));
+            console.log("  timeUp:", localStorage.getItem("timeUp"));
+            console.log("✅ Check Console for details");
+            document.getElementById('storage-output').innerHTML = `<span class="success">✅ Check browser Console (F12) for detailed logs</span>`;
+        }
+
+        // Auto-check on page load
+        window.addEventListener('load', () => {
+            testLocalStorage();
+        });
+    </script>
+</body>
+</html>
